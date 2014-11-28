@@ -35,7 +35,6 @@
 @property (readwrite)   NSInteger           nResultType;    // default : DO_PICKER_RESULT_UIIMAGE
 
 @property (weak, nonatomic) IBOutlet UICollectionView   *cvPhotoList;
-@property (weak, nonatomic) IBOutlet UITableView        *tvAlbumList;
 @property (weak, nonatomic) IBOutlet UIView             *vDimmed;
 
 
@@ -43,37 +42,12 @@
 - (void)initControls;
 - (void)readAlbumList:(BOOL)bFirst;
 
-// bottom menu
-@property (weak, nonatomic) IBOutlet UIView             *vBottomMenu;
-@property (weak, nonatomic) IBOutlet UIButton           *btSelectAlbum;
-@property (weak, nonatomic) IBOutlet UIButton           *btOK;
-@property (weak, nonatomic) IBOutlet UIImageView        *ivLine1;
-@property (weak, nonatomic) IBOutlet UIImageView        *ivLine2;
-@property (weak, nonatomic) IBOutlet UILabel            *lbSelectCount;
-@property (weak, nonatomic) IBOutlet UIImageView        *ivShowMark;
-
-- (void)initBottomMenu;
-- (IBAction)onSelectPhoto:(id)sender;
-- (IBAction)onCancel:(id)sender;
-- (IBAction)onSelectAlbum:(id)sender;
-- (void)hideBottomMenu;
-
-
-// side buttons
-@property (weak, nonatomic) IBOutlet UIButton           *btUp;
-@property (weak, nonatomic) IBOutlet UIButton           *btDown;
-
-- (IBAction)onUp:(id)sender;
-- (IBAction)onDown:(id)sender;
-
-
 // photos
 @property (strong, nonatomic)   UIImageView             *ivPreview;
 
 - (void)showPhotosInGroup:(NSInteger)nIndex;    // nIndex : index in album array
 - (void)showPreview:(NSInteger)nIndex;          // nIndex : index in photo array
 - (void)hidePreview;
-
 
 // select photos
 @property (strong, nonatomic)   NSMutableDictionary     *dSelected;

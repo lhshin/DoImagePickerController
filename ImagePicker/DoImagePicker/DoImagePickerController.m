@@ -26,14 +26,10 @@
 {
     [super viewDidLoad];
     
-    [self initBottomMenu];
     [self initControls];
     
     UINib *nib = [UINib nibWithNibName:@"DoPhotoCell" bundle:nil];
     [_cvPhotoList registerNib:nib forCellWithReuseIdentifier:@"DoPhotoCell"];
-    
-    _tvAlbumList.frame = CGRectMake(0, _vBottomMenu.frame.origin.y, self.view.frame.size.width, self.view.frame.size.height);
-    _tvAlbumList.alpha = 0.0;
 
     [self readAlbumList:YES];
 
@@ -75,27 +71,6 @@
 #pragma mark - for init
 - (void)initControls
 {
-    // side buttons
-    _btUp.backgroundColor = DO_SIDE_BUTTON_COLOR;
-    _btDown.backgroundColor = DO_SIDE_BUTTON_COLOR;
-    
-    CALayer *layer1 = [_btDown layer];
-	[layer1 setMasksToBounds:YES];
-	[layer1 setCornerRadius:_btDown.frame.size.height / 2.0 - 1];
-    
-    CALayer *layer2 = [_btUp layer];
-	[layer2 setMasksToBounds:YES];
-	[layer2 setCornerRadius:_btUp.frame.size.height / 2.0 - 1];
-    
-    // table view
-    UIImageView *ivHeader = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, _tvAlbumList.frame.size.width, 0.5)];
-    ivHeader.backgroundColor = DO_ALBUM_NAME_TEXT_COLOR;
-    _tvAlbumList.tableHeaderView = ivHeader;
-    
-    UIImageView *ivFooter = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, _tvAlbumList.frame.size.width, 0.5)];
-    ivFooter.backgroundColor = DO_ALBUM_NAME_TEXT_COLOR;
-    _tvAlbumList.tableFooterView = ivFooter;
-    
     // dimmed view
     _vDimmed.alpha = 0.0;
     _vDimmed.frame = self.view.frame;
@@ -107,61 +82,18 @@
 {
     [ASSETHELPER getGroupList:^(NSArray *aGroups) {
         
-        [_tvAlbumList reloadData];
-
         NSInteger nIndex = 0;
 #ifdef DO_SAVE_SELECTED_ALBUM
         nIndex = [self getSelectedGroupIndex:aGroups];
         if (nIndex < 0)
             nIndex = 0;
 #endif
-        [_tvAlbumList selectRowAtIndexPath:[NSIndexPath indexPathForRow:nIndex inSection:0] animated:NO scrollPosition:UITableViewScrollPositionTop];
-        [_btSelectAlbum setTitle:[ASSETHELPER getGroupInfo:nIndex][@"name"] forState:UIControlStateNormal];
-        
         [self showPhotosInGroup:nIndex];
-        
-        if (aGroups.count == 1)
-            _btSelectAlbum.enabled = NO;
-        
-        // calculate tableview's height
-        _tvAlbumList.frame = CGRectMake(_tvAlbumList.frame.origin.x, _tvAlbumList.frame.origin.y, _tvAlbumList.frame.size.width, MIN(aGroups.count * 50, 200));
     }];
 }
 
 #pragma mark - for bottom menu
-- (void)initBottomMenu
-{
-    _vBottomMenu.backgroundColor = DO_MENU_BACK_COLOR;
-    [_btSelectAlbum setTitleColor:DO_BOTTOM_TEXT_COLOR forState:UIControlStateNormal];
-    [_btSelectAlbum setTitleColor:DO_BOTTOM_TEXT_COLOR forState:UIControlStateDisabled];
-    
-    _ivLine1.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"line.png"]];
-    _ivLine2.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"line.png"]];
-    
-    if (_nMaxCount == DO_NO_LIMIT_SELECT)
-    {
-        _lbSelectCount.text = @"(0)";
-        _lbSelectCount.textColor = DO_BOTTOM_TEXT_COLOR;
-    }
-    else if (_nMaxCount <= 1)
-    {
-        // hide ok button
-        _btOK.hidden = YES;
-        _ivLine1.hidden = YES;
-        
-        CGRect rect = _btSelectAlbum.frame;
-        rect.size.width = rect.size.width + 60;
-        _btSelectAlbum.frame = rect;
-        
-        _lbSelectCount.hidden = YES;
-    }
-    else
-    {
-        _lbSelectCount.text = [NSString stringWithFormat:@"(0/%d)", (int)_nMaxCount];
-        _lbSelectCount.textColor = DO_BOTTOM_TEXT_COLOR;
-    }
-}
-
+/*
 - (IBAction)onSelectPhoto:(id)sender
 {
     NSMutableArray *aResult = [[NSMutableArray alloc] initWithCapacity:_dSelected.count];
@@ -189,95 +121,16 @@
 {
     [_delegate didCancelDoImagePickerController];
 }
-
-- (IBAction)onSelectAlbum:(id)sender
-{
-    if (_tvAlbumList.frame.origin.y == _vBottomMenu.frame.origin.y)
-    {
-        // show tableview
-        [UIView animateWithDuration:0.2 animations:^(void) {
-
-            _vDimmed.alpha = 0.7;
-
-            _tvAlbumList.frame = CGRectMake(0, _vBottomMenu.frame.origin.y - _tvAlbumList.frame.size.height,
-                                            _tvAlbumList.frame.size.width, _tvAlbumList.frame.size.height);
-            _tvAlbumList.alpha = 1.0;
-            
-            _ivShowMark.transform = CGAffineTransformMakeRotation(M_PI);
-        }];
-    }
-    else
-    {
-        // hide tableview
-        [self hideBottomMenu];
-    }
-}
+*/
 
 #pragma mark - for side buttons
 - (void)onTapOnDimmedView:(UITapGestureRecognizer *)tap
 {
     if (tap.state == UIGestureRecognizerStateEnded)
     {
-        [self hideBottomMenu];
-        
         if (_ivPreview != nil)
             [self hidePreview];
     }
-}
-
-- (IBAction)onUp:(id)sender
-{
-    [_cvPhotoList scrollToItemAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0] atScrollPosition:UICollectionViewScrollPositionTop animated:YES];
-}
-
-- (IBAction)onDown:(id)sender
-{
-    [_cvPhotoList scrollToItemAtIndexPath:[NSIndexPath indexPathForRow:[ASSETHELPER getPhotoCountOfCurrentGroup] - 1 inSection:0] atScrollPosition:UICollectionViewScrollPositionTop animated:YES];
-}
-
-#pragma mark - UITableViewDelegate for selecting album
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
-{
-    return [ASSETHELPER getGroupCount];
-}
-
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    DoAlbumCell *cell = (DoAlbumCell*)[tableView dequeueReusableCellWithIdentifier:@"DoAlbumCell"];
-    
-    if (cell == nil)
-    {
-        cell = [[[NSBundle mainBundle] loadNibNamed:@"DoAlbumCell" owner:nil options:nil] lastObject];
-    }
-
-    NSDictionary *d = [ASSETHELPER getGroupInfo:indexPath.row];
-    cell.lbAlbumName.text   = d[@"name"];
-    cell.lbCount.text       = [NSString stringWithFormat:@"%@", d[@"count"]];
-    
-    return cell;
-}
-
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    [self showPhotosInGroup:indexPath.row];
-    [_btSelectAlbum setTitle:[ASSETHELPER getGroupInfo:indexPath.row][@"name"] forState:UIControlStateNormal];
-
-    [self hideBottomMenu];
-}
-
-- (void)hideBottomMenu
-{
-    [UIView animateWithDuration:0.2 animations:^(void) {
-        
-        _vDimmed.alpha = 0.0;
-        
-        _tvAlbumList.frame = CGRectMake(0, _vBottomMenu.frame.origin.y, _tvAlbumList.frame.size.width, _tvAlbumList.frame.size.height);
-        _ivShowMark.transform = CGAffineTransformMakeRotation(0);
-        
-        [UIView setAnimationDelay:0.1];
-
-        _tvAlbumList.alpha = 0.0;
-    }];
 }
 
 #pragma mark - UICollectionViewDelegates for photos
@@ -323,10 +176,12 @@
 			[cell setSelectMode:NO];
 		}
         
+        /*
         if (_nMaxCount == DO_NO_LIMIT_SELECT)
             _lbSelectCount.text = [NSString stringWithFormat:@"(%d)", (int)_dSelected.count];
         else
             _lbSelectCount.text = [NSString stringWithFormat:@"(%d/%d)", (int)_dSelected.count, (int)_nMaxCount];
+         */
     }
     else
     {
@@ -354,15 +209,6 @@
     if (scrollView == _cvPhotoList)
     {
         [UIView animateWithDuration:0.2 animations:^(void) {
-            if (scrollView.contentOffset.y <= 50)
-                _btUp.alpha = 0.0;
-            else
-                _btUp.alpha = 1.0;
-            
-            if (scrollView.contentOffset.y + scrollView.frame.size.height >= scrollView.contentSize.height)
-                _btDown.alpha = 0.0;
-            else
-                _btDown.alpha = 1.0;
         }];
     }
 }
@@ -413,15 +259,6 @@
     {
         double fX = [gestureRecognizer locationInView:_cvPhotoList].x;
         double fY = [gestureRecognizer locationInView:_cvPhotoList].y;
-
-        // check boundary of controls
-        CGPoint pt = [gestureRecognizer locationInView:self.view];
-        if (CGRectContainsPoint(_vBottomMenu.frame, pt))
-            return;
-        if (_btDown.alpha == 1.0 && CGRectContainsPoint(_btDown.frame, pt))
-            return;
-        if (_btUp.alpha == 1.0 && CGRectContainsPoint(_btUp.frame, pt))
-            return;
         
         NSIndexPath *indexPath = nil;
         for (UICollectionViewCell *cell in _cvPhotoList.visibleCells)
@@ -449,12 +286,10 @@
     if (_nMaxCount == DO_NO_LIMIT_SELECT)
     {
         _dSelected = [[NSMutableDictionary alloc] init];
-        _lbSelectCount.text = @"(0)";
     }
     else if (_nMaxCount > 1)
     {
         _dSelected = [[NSMutableDictionary alloc] initWithCapacity:_nMaxCount];
-        _lbSelectCount.text = [NSString stringWithFormat:@"(0/%d)", (int)_nMaxCount];
     }
     
     [ASSETHELPER getPhotoListOfGroupByIndex:nIndex result:^(NSArray *aPhotos) {
@@ -471,15 +306,6 @@
 		{
 			[_cvPhotoList scrollToItemAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0] atScrollPosition:UICollectionViewScrollPositionTop animated:NO];
         }
-
-        _btUp.alpha = 0.0;
-
-        dispatch_async(dispatch_get_main_queue(), ^(void) {
-            if (_cvPhotoList.contentSize.height < _cvPhotoList.frame.size.height)
-                _btDown.alpha = 0.0;
-            else
-                _btDown.alpha = 1.0;
-        });
     }];
     
 #ifdef DO_SAVE_SELECTED_ALBUM
@@ -511,9 +337,6 @@
 
 - (void)hidePreview
 {
-    [self.view bringSubviewToFront:_tvAlbumList];
-    [self.view bringSubviewToFront:_vBottomMenu];
-    
     [_ivPreview removeFromSuperview];
     _ivPreview = nil;
 
